@@ -61,9 +61,11 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(msg)
         _log(log_path, msg)
 
+    ingest_ts = datetime.now(timezone.utc).isoformat()
     rows = load_raw_csv(raw_path)
     raw_count = len(rows)
     log(f"run_id={run_id}")
+    log(f"ingest_completed_at={ingest_ts}")
     log(f"raw_records={raw_count}")
 
     cleaned, quarantine = clean_rows(
@@ -103,9 +105,13 @@ def cmd_run(args: argparse.Namespace) -> int:
     if cleaned:
         latest_exported = max((r.get("exported_at") or "" for r in cleaned), default="")
 
+    publish_ts = datetime.now(timezone.utc).isoformat()
+    log(f"publish_completed_at={publish_ts}")
     manifest = {
         "run_id": run_id,
-        "run_timestamp": datetime.now(timezone.utc).isoformat(),
+        "ingest_completed_at": ingest_ts,
+        "run_timestamp": publish_ts,
+        "publish_completed_at": publish_ts,
         "raw_path": str(raw_path.relative_to(ROOT)),
         "raw_records": raw_count,
         "cleaned_records": len(cleaned),

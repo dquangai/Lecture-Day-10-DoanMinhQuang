@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Set, Tuple
+
+from transform.cleaning_rules import ALLOWED_DOC_IDS
 
 
 @dataclass
@@ -109,6 +111,48 @@ def run_expectations(cleaned_rows: List[Dict[str, Any]]) -> Tuple[List[Expectati
             ok6,
             "halt",
             f"violations={len(bad_hr_annual)}",
+        )
+    )
+
+    # E7 (mới): mỗi doc_id trong allowlist phải có ít nhất 1 chunk sau clean
+    present: Set[str] = {str(r.get("doc_id") or "") for r in cleaned_rows}
+    missing_docs = sorted(ALLOWED_DOC_IDS - present)
+    ok7 = len(missing_docs) == 0
+    results.append(
+        ExpectationResult(
+            "all_allowed_docs_present",
+            ok7,
+            "halt",
+            f"missing_doc_ids={missing_docs}",
+        )
+    )
+
+    # E8 (mới): HR phải còn chunk phép năm 2026 (12 ngày) sau khi loại bản cũ
+    hr_2026 = [
+        r
+        for r in cleaned_rows
+        if r.get("doc_id") == "hr_leave_policy"
+        and ("12 ngày phép năm" in (r.get("chunk_text") or "") or "12 ngày" in (r.get("chunk_text") or ""))
+    ]
+    ok8 = len(hr_2026) >= 1
+    results.append(
+        ExpectationResult(
+            "hr_has_2026_annual_leave_chunk",
+            ok8,
+            "halt",
+            f"matching_chunks={len(hr_2026)}",
+        )
+    )
+
+    # E9 (mới): access_control_sop phải có đủ chunk phục vụ retrieval (≥3 level)
+    access_rows = [r for r in cleaned_rows if r.get("doc_id") == "access_control_sop"]
+    ok9 = len(access_rows) >= 3
+    results.append(
+        ExpectationResult(
+            "access_control_min_chunks",
+            ok9,
+            "warn",
+            f"access_control_chunks={len(access_rows)}",
         )
     )
 

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Báo cáo Lab Day 10 — DoanMinhQuang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vin-blue: #2e548a;
+    --vin-blue-dark: #1a3355;
+    --vin-red: #c83538;
+    --light-blue: #dce6f5;
+    --apple-dark: #1d1d1f;
+    --apple-gray: #86868b;
+    --teal: #0d7377;
+    --teal-light: #e6f4f5;
+    --green: #1f8f62;
+    --green-light: #e8f6ef;
+    --amber-light: #fff4d8;
+    --slide-w: 1280px;
+    --slide-h: 720px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh;
+  }
+  .presentation {
+    width: var(--slide-w); height: var(--slide-h);
+    position: relative; transform-origin: center center;
+  }
+  .slide {
+    width: var(--slide-w); height: var(--slide-h);
+    position: absolute; top: 0; left: 0;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
+    display: flex; flex-direction: column;
+    z-index: 0;
+  }
+  .slide.active { opacity: 1; visibility: visible; pointer-events: auto; z-index: 1; }
+
+  .slide.content-slide { background: white; padding: 0 50px; }
+  .frame-header { padding-top: 32px; }
+  .frame-title { font-size: 32px; font-weight: 800; color: var(--apple-dark); line-height: 1.22; }
+  .frame-sub { font-size: 18px; color: var(--apple-gray); margin-top: 6px; }
+  .thin-rule { height: 1px; background: rgba(0,0,0,0.07); margin-top: 12px; }
+  .slide-body { flex: 1; padding: 18px 0 10px; color: var(--apple-dark); font-size: 18px; line-height: 1.48; overflow: hidden; min-height: 0; }
+
+  .credit-footer {
+    display: flex; align-items: center; padding: 0 50px 14px;
+    font-size: 13px; color: var(--apple-gray); opacity: 0.8; flex-shrink: 0; margin-top: auto;
+  }
+  .credit-footer .f-left { flex: 1; }
+  .credit-footer .f-center { flex: 1; text-align: center; }
+  .credit-footer .f-right { flex: 1; text-align: right; }
+
+  .slide.section-slide {
+    background: linear-gradient(135deg, var(--vin-blue-dark), var(--teal));
+    padding: 0 60px; justify-content: center;
+  }
+  .slide.section-slide::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background:var(--vin-red); }
+  .section-title { font-size: 42px; font-weight: 800; color: white; line-height: 1.16; }
+  .section-redline { width: 72px; height: 4px; background: var(--vin-red); margin: 16px 0; border-radius: 2px; }
+  .section-desc { font-size: 20px; color: rgba(255,255,255,0.72); line-height: 1.45; }
+
+  .slide.hero-slide {
+    background: linear-gradient(135deg, var(--vin-blue-dark), var(--teal));
+    padding: 0 60px; justify-content: center;
+  }
+  .hero-eyebrow { font-size: 16px; color: rgba(255,255,255,0.45); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .hero-title { font-size: 48px; font-weight: 900; color: white; margin-top: 12px; line-height: 1.15; }
+  .hero-sub { font-size: 22px; color: rgba(255,255,255,0.75); margin-top: 16px; max-width: 820px; line-height: 1.45; }
+  .hero-meta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .chip { display: inline-flex; padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.15); }
+
+  .slide.dark-statement {
+    background: var(--apple-dark); align-items: center; justify-content: center;
+    text-align: center; padding: 70px;
+  }
+  .statement-text { font-size: 36px; font-weight: 800; color: white; line-height: 1.38; max-width: 92%; }
+
+  .slide.qa-slide {
+    background: var(--vin-blue); align-items: center; justify-content: center;
+    text-align: center; padding: 70px;
+  }
+  .qa-title { font-size: 52px; font-weight: 900; color: white; margin-bottom: 16px; }
+  .qa-prompt { font-size: 20px; color: rgba(255,255,255,0.75); max-width: 80%; line-height: 1.5; }
+
+  .slide-counter {
+    position: fixed; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.75); color: white;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; z-index: 100;
+  }
+  .nav-hint {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.35); font-size: 11px; z-index: 100;
+  }
+
+  .split-50-50 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; height: 100%; }
+  .split-40-60 { display: grid; grid-template-columns: 0.4fr 0.6fr; gap: 22px; height: 100%; }
+  .panel {
+    background: #fafafa; border-radius: 18px; border: 1px solid rgba(0,0,0,0.06);
+    padding: 16px 18px; box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+  }
+  .panel h3 { font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--vin-blue); }
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700;
+  }
+  .flow span {
+    background: var(--teal-light); color: var(--teal);
+    padding: 8px 12px; border-radius: 10px;
+  }
+  .flow .arrow { color: var(--apple-gray); font-weight: 400; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.07); vertical-align: top; }
+  th { font-weight: 800; color: var(--vin-blue); background: rgba(46,84,138,0.06); }
+  .ok { color: var(--green); font-weight: 800; }
+  .fail { color: var(--vin-red); font-weight: 800; }
+
+  ul.compact { padding-left: 20px; }
+  ul.compact li { margin-bottom: 6px; }
+
+  .metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .metric {
+    background: var(--teal-light); border-radius: 14px; padding: 14px; text-align: center;
+  }
+  .metric .num { font-size: 28px; font-weight: 900; color: var(--teal); }
+  .metric .lbl { font-size: 13px; color: var(--apple-gray); margin-top: 4px; font-weight: 600; }
+
+  .bridge { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .bridge-card {
+    border-radius: 16px; padding: 16px; text-align: center; font-weight: 800;
+    background: rgba(46,84,138,0.06); border: 1px solid rgba(0,0,0,0.06);
+  }
+  .bridge-card.highlight { background: var(--green-light); border-color: rgba(31,143,98,0.2); color: var(--green); }
+  .bridge-card .day { font-size: 13px; opacity: 0.7; margin-bottom: 6px; }
+  .bridge-card .label { font-size: 16px; }
+
+  code, .cmd {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px; background: #f0f0f2; padding: 2px 6px; border-radius: 6px;
+  }
+  .cmd-block {
+    background: #1d1d1f; color: #a8ffbc; padding: 12px 16px; border-radius: 12px;
+    font-family: Consolas, monospace; font-size: 13px; margin-top: 10px; line-height: 1.6;
+  }
+
+  .grade-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .grade-item {
+    background: var(--green-light); border-radius: 10px; padding: 10px 8px;
+    text-align: center; font-size: 12px; font-weight: 700; color: var(--green);
+  }
+
+  @media print {
+    body { background: white; overflow: visible; height: auto; }
+    .presentation { transform: none !important; width: 100%; height: auto; }
+    .slide {
+      position: relative; opacity: 1 !important; visibility: visible !important;
+      page-break-after: always; height: auto; min-height: 100vh;
+    }
+    .slide-counter, .nav-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="slide-counter"><span id="cur">1</span> / <span id="total">12</span></div>
+<div class="nav-hint">← → hoặc Space · In PDF: Ctrl+P</div>
+
+<div class="presentation" id="deck">
+
+  <!-- 1 Title -->
+  <section class="slide hero-slide active">
+    <div class="hero-eyebrow">AI in Action · Lab Day 10</div>
+    <h1 class="hero-title">Data Pipeline &amp; Data Observability</h1>
+    <p class="hero-sub">
+      Báo cáo &amp; thuyết trình — Pipeline ETL, quality as code, before/after evidence
+      cho trợ lý CS + IT Helpdesk.
+    </p>
+    <div class="hero-meta">
+      <span class="chip">Đoàn Minh Quang · 2A202600757</span>
+      <span class="chip">Nhóm DoanMinhQuang</span>
+      <span class="chip">run_id: clean-final</span>
+      <span class="chip">Grading 10/10</span>
+    </div>
+    <div class="credit-footer" style="color:rgba(255,255,255,0.35); position:absolute; bottom:14px; left:60px; right:60px;">
+      <div class="f-left">Lecture-Day-10-DoanMinhQuang</div>
+      <div class="f-center">Báo cáo Lab</div>
+      <div class="f-right">2026-06-10</div>
+    </div>
+  </section>
+
+  <!-- 2 Problem -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Vấn đề: Data sai → Agent trả lời sai</div>
+      <div class="frame-sub">Garbage in → garbage out — debug pipeline trước model</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="split-50-50">
+        <div class="panel">
+          <h3>Triệu chứng</h3>
+          <ul class="compact">
+            <li>Trả <strong>14 ngày</strong> hoàn tiền thay vì <strong>7 ngày</strong></li>
+            <li>HR trả <strong>10 ngày phép</strong> (2025) thay vì <strong>12 ngày</strong> (2026)</li>
+            <li>Escalation P1 không match chunk <strong>10 phút</strong></li>
+            <li>Access control không retrieve được</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Nguồn lỗi trong raw CSV (247 dòng)</h3>
+          <ul class="compact">
+            <li>Chunk refund stale, duplicate, ngày không ISO</li>
+            <li>HR version conflict · export marker <code>!!!</code></li>
+            <li><code>access_control_sop</code> thiếu allowlist</li>
+            <li>Chunk SLA P2 lẫn doc P1 → retrieval nhiễu</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">Đoàn Minh Quang</div>
+      <div class="f-center">Lab Day 10</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 3 Architecture -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Kiến trúc pipeline</div>
+      <div class="frame-sub">ingest → clean → validate → embed → observe</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="flow" style="margin-bottom:18px;">
+        <span>CSV raw</span><span class="arrow">→</span>
+        <span>Clean + quarantine</span><span class="arrow">→</span>
+        <span>Expectations</span><span class="arrow">→</span>
+        <span>Chroma embed</span><span class="arrow">→</span>
+        <span>Manifest / Eval</span>
+      </div>
+      <div class="metric-row">
+        <div class="metric"><div class="num">247</div><div class="lbl">raw_records</div></div>
+        <div class="metric"><div class="num">33</div><div class="lbl">cleaned</div></div>
+        <div class="metric"><div class="num">214</div><div class="lbl">quarantine</div></div>
+        <div class="metric"><div class="num">10/10</div><div class="lbl">grading</div></div>
+      </div>
+      <div class="cmd-block">python etl_pipeline.py run --run-id clean-final<br>python grading_run.py --out artifacts/eval/grading_run.jsonl<br>streamlit run streamlit_app.py</div>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">collection: day10_kb</div>
+      <div class="f-center">Pipeline</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 4 Cleaning -->
+  <section class="slide section-slide">
+    <div class="section-title">Cleaning rules mới</div>
+    <div class="section-redline"></div>
+    <div class="section-desc">
+      Mở rộng allowlist · quarantine stale · chuẩn hóa export · enrich retrieval<br><br>
+      ✓ access_control_sop vào allowlist<br>
+      ✓ Quarantine HR "10 ngày phép năm" · SLA P2 trong doc P1<br>
+      ✓ Strip "Nội dung không rõ ràng:" và marker !!!<br>
+      ✓ Fix typo refund · enrich escalation P1 10 phút<br>
+      ✓ HR cutoff từ env HR_LEAVE_MIN_EFFECTIVE_DATE
+    </div>
+    <div class="credit-footer" style="color:rgba(255,255,255,0.35); position:absolute; bottom:14px; left:60px; right:60px;">
+      <div class="f-left">cleaning_rules.py</div>
+      <div class="f-center">Transform</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 5 Expectations -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Expectation suite — quality as code</div>
+      <div class="frame-sub">Halt có kiểm soát trước khi embed</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <table>
+        <thead>
+          <tr><th>Expectation</th><th>Severity</th><th>Mục đích</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>refund_no_stale_14d_window</td><td>halt</td><td>Không embed refund 14 ngày</td></tr>
+          <tr><td>hr_leave_no_stale_10d_annual</td><td>halt</td><td>Loại bản HR annual leave cũ</td></tr>
+          <tr><td>all_allowed_docs_present</td><td>halt</td><td>Mỗi doc allowlist có chunk</td></tr>
+          <tr><td>hr_has_2026_annual_leave_chunk</td><td>halt</td><td>Còn chunk 12 ngày phép</td></tr>
+          <tr><td>access_control_min_chunks</td><td>warn</td><td>Đủ chunk access control</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:14px; font-size:15px; color:var(--apple-gray);">
+        Run <code>clean-final</code>: tất cả halt pass → <span class="ok">PIPELINE_OK exit 0</span>
+      </p>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">expectations.py</div>
+      <div class="f-center">Quality</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 6 metric_impact -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Bảng metric_impact (chống trivial)</div>
+      <div class="frame-sub">Mỗi rule/expectation có tác động đo được</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body" style="font-size:14px;">
+      <table>
+        <thead>
+          <tr><th>Rule / Expectation</th><th>Trước</th><th>Sau</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>access_control_sop allowlist</td><td class="fail">gq_d10_10 FAIL</td><td class="ok">6 chunk · OK</td></tr>
+          <tr><td>stale_hr_annual_leave_text</td><td class="fail">10 ngày trong index</td><td class="ok">E6 OK · gq_d10_09</td></tr>
+          <tr><td>sla P2 quarantine + enrich P1</td><td class="fail">gq_d10_06 FAIL</td><td class="ok">escalation OK</td></tr>
+          <tr><td>inject + refund expectation</td><td class="ok">violations=0</td><td class="fail">inject: violations=1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">group_report.md</div>
+      <div class="f-center">Evidence</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 7 Before/After -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Before / After — Sprint 3 inject</div>
+      <div class="frame-sub">Chứng minh data quality ảnh hưởng retrieval</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="cmd-block" style="margin-bottom:14px;">python etl_pipeline.py run --run-id inject-bad --no-refund-fix --skip-validate</div>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>inject-bad</th><th>clean-final</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Eval 21 câu</td><td>20/21</td><td class="ok"><strong>21/21</strong></td></tr>
+          <tr><td>q_refund_window hits_forbidden</td><td class="fail"><strong>yes</strong> (14 ngày)</td><td class="ok">no (7 ngày)</td></tr>
+          <tr><td>Grading 10 câu</td><td class="fail">fail</td><td class="ok"><strong>10/10</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">after_inject_bad.csv · after_fix_eval.csv</div>
+      <div class="f-center">Before/After</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 8 Grading -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Grading chính thức — 10/10 OK</div>
+      <div class="frame-sub">instructor_quick_check.py — tất cả GRADE_CHECK pass</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="grade-grid">
+        <div class="grade-item">gq_d10_01<br>Refund 7 ngày</div>
+        <div class="grade-item">gq_d10_02<br>Exception digital</div>
+        <div class="grade-item">gq_d10_03<br>Finance 3-5 ngày</div>
+        <div class="grade-item">gq_d10_04<br>SLA 15 phút</div>
+        <div class="grade-item">gq_d10_05<br>Resolution 4h</div>
+        <div class="grade-item">gq_d10_06<br>Escalation 10p</div>
+        <div class="grade-item">gq_d10_07<br>Lockout 5 lần</div>
+        <div class="grade-item">gq_d10_08<br>VPN 2 thiết bị</div>
+        <div class="grade-item">gq_d10_09<br>HR 12 ngày</div>
+        <div class="grade-item">gq_d10_10<br>Access L4</div>
+      </div>
+      <p style="margin-top:18px; font-size:15px;">
+        Artifact: <code>artifacts/eval/grading_run.jsonl</code>
+      </p>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">grading_run.py</div>
+      <div class="f-center">Grading</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 9 Demo -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Demo — Chatbot grounded (Streamlit)</div>
+      <div class="frame-sub">Retrieval từ day10_kb · không dùng LLM</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="split-40-60">
+        <div class="panel">
+          <h3>Luồng demo live</h3>
+          <ol class="compact" style="padding-left:18px;">
+            <li>Chạy <code>streamlit run streamlit_app.py</code></li>
+            <li>Hỏi câu refund → trả <strong>7 ngày</strong></li>
+            <li>Inject corruption → hỏi lại → <strong>14 ngày</strong> + cảnh báo</li>
+            <li>Rerun clean-final → khôi phục</li>
+          </ol>
+        </div>
+        <div class="panel">
+          <h3>Câu hỏi mẫu</h3>
+          <ul class="compact">
+            <li>Khách có bao nhiêu ngày hoàn tiền?</li>
+            <li>SLA phản hồi P1 là bao lâu?</li>
+            <li>Escalate P1 sau bao lâu?</li>
+            <li>Nhân viên dưới 3 năm được bao nhiêu ngày phép?</li>
+            <li>Level 4 Admin Access cần ai phê duyệt?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">streamlit_app.py</div>
+      <div class="f-center">Demo</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 10 Continuity -->
+  <section class="slide content-slide">
+    <div class="frame-header">
+      <div class="frame-title">Mạch 3 ngày — Day 08 → 09 → 10</div>
+      <div class="frame-sub">Cùng case CS + IT Helpdesk</div>
+      <div class="thin-rule"></div>
+    </div>
+    <div class="slide-body">
+      <div class="bridge">
+        <div class="bridge-card">
+          <div class="day">Day 08</div>
+          <div class="label">RAG grounded<br>retrieve đúng đoạn</div>
+        </div>
+        <div class="bridge-card">
+          <div class="day">Day 09</div>
+          <div class="label">Supervisor + workers<br>orchestration · trace</div>
+        </div>
+        <div class="bridge-card highlight">
+          <div class="day">Day 10</div>
+          <div class="label">Data pipeline<br>+ observability</div>
+        </div>
+      </div>
+      <p style="margin-top:20px; font-size:16px; color:var(--apple-gray);">
+        Agent Day 09 chỉ tốt khi corpus Day 10 <strong>sạch version</strong> và được publish qua pipeline có <code>run_id</code>.
+      </p>
+    </div>
+    <div class="credit-footer">
+      <div class="f-left">Continuity</div>
+      <div class="f-center">3 ngày</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 11 Statement -->
+  <section class="slide dark-statement">
+    <p class="statement-text">
+      Đừng debug model trước khi debug pipeline.<br>
+      <span style="color:rgba(255,255,255,0.55); font-size:28px; font-weight:600;">
+        Freshness → Volume → Schema → Lineage → rồi mới prompt.
+      </span>
+    </p>
+    <div class="credit-footer" style="color:rgba(255,255,255,0.35); position:absolute; bottom:14px; left:60px; right:60px;">
+      <div class="f-left">Takeaway</div>
+      <div class="f-center">Day 10</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+  <!-- 12 Q&A -->
+  <section class="slide qa-slide">
+    <div class="qa-title">Cảm ơn &amp; Q&amp;A</div>
+    <div class="qa-prompt">
+      Đoàn Minh Quang · 2A202600757 · Nhóm DoanMinhQuang<br><br>
+      Repo: <code style="background:rgba(255,255,255,0.15); padding:4px 8px; border-radius:6px;">day10/lab</code>
+    </div>
+    <div class="credit-footer" style="color:rgba(255,255,255,0.35); position:absolute; bottom:14px; left:60px; right:60px;">
+      <div class="f-left">presentation.html</div>
+      <div class="f-center">Q&amp;A</div>
+      <div class="f-right slide-page-num"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let idx = 0;
+
+  document.getElementById('total').textContent = total;
+
+  function fit() {
+    const deck = document.getElementById('deck');
+    const sx = window.innerWidth / 1280;
+    const sy = window.innerHeight / 720;
+    deck.style.transform = 'scale(' + Math.min(sx, sy) * 0.96 + ')';
+  }
+
+  function show(i) {
+    idx = (i + total) % total;
+    slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+    document.getElementById('cur').textContent = idx + 1;
+    document.querySelectorAll('.slide-page-num').forEach(el => {
+      el.textContent = (idx + 1) + ' / ' + total;
+    });
+  }
+
+  function next() { show(idx + 1); }
+  function prev() { show(idx - 1); }
+
+  window.addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); next(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(total - 1);
+  });
+
+  window.addEventListener('resize', fit);
+  fit();
+  show(0);
+})();
+</script>
+</body>
+</html>

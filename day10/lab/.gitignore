@@ -1,5 +1,6 @@
 .env
 .venv/
+.venv2/
 venv/
 __pycache__/
 *.pyc
@@ -7,5 +8,11 @@ __pycache__/
 chroma_db/
 .pytest_cache/
 *.log
+.vscode/
 
-artifacts/*
+# Artifact nội bộ — không push (CSV/log lớn, tái tạo được bằng pipeline)
+artifacts/cleaned/
+artifacts/quarantine/
+artifacts/logs/
+
+# Bắt buộc nộp: artifacts/eval/* và artifacts/manifests/* (không ignore)

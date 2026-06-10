@@ -3,7 +3,7 @@
 
 version: "1.0"
 dataset: "kb_chunk_export"
-owner_team: "__TODO__"
+owner_team: "AI in Action — Nhóm DoanMinhQuang"
 
 schema_cleaned:
   chunk_id:
@@ -32,11 +32,15 @@ quality_rules:
   - id: "no_stale_refund_window"
     description: "Không được để chunk policy refund chứa cửa sổ 14 ngày (lệch so với v4 = 7 ngày)"
     severity: "halt"
+  - id: "all_allowed_docs_present"
+    severity: "halt"
+  - id: "hr_has_2026_annual_leave_chunk"
+    severity: "halt"
 
 freshness:
   measured_at: "publish"  # ingest | cleaned | publish
   sla_hours: 24
-  alert_channel: "__TODO__"
+  alert_channel: "#data-pipeline-alerts"
 
 canonical_sources:
   - path: "data/docs/policy_refund_v4.txt"
@@ -47,14 +51,16 @@ canonical_sources:
     doc_id: "it_helpdesk_faq"
   - path: "data/docs/hr_leave_policy.txt"
     doc_id: "hr_leave_policy"
+  - path: "data/docs/access_control_sop.txt"
+    doc_id: "access_control_sop"
 
-# Baseline allowlist export — nhóm mở rộng doc mới phải đồng bộ cleaning_rules + contract.
 allowed_doc_ids:
   - policy_refund_v4
   - sla_p1_2026
   - it_helpdesk_faq
   - hr_leave_policy
+  - access_control_sop
 
-# Merit/Distinction: có thể đưa cutoff versioning vào env và tham chiếu ở đây (tránh hard-code trong code).
 policy_versioning:
   hr_leave_min_effective_date: "2026-01-01"
+  env_override: "HR_LEAVE_MIN_EFFECTIVE_DATE"
